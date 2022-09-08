@@ -16,7 +16,7 @@ def split_pairs(cigar: str) -> list(tuple((int, str))):
 
     cigar_list = []
     for i in range(0, len(cigar), 2):
-        cigar_list.append((cigar[i], cigar[i+1]))
+        cigar_list.append((int(cigar[i]), cigar[i+1]))
     return (cigar_list)
 
 def cigar_to_edits(cigar: str) -> str:
