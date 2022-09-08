@@ -67,7 +67,7 @@ def edits_to_cigar(edits: str) -> str:
     >>> edits_to_cigar('MDMMMMMMIMMMM')
     '1M1D6M1I4M'
     """
-    if edits = "":
+    if edits == "":
         return("")
     block_list = split_blocks(edits)
     CIGAR_str = ""
