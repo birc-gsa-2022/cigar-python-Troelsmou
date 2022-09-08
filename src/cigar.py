@@ -3,73 +3,74 @@
 import re
 
 
-def split_pairs(cigar: str) -> list[tuple[int, str]]:
+def split_pairs(cigar: str) -> list(tuple((int, str))):
     """Split a CIGAR string into a list of integer-operation pairs.
-
     Args:
         cigar (str): A CIGAR string
-
     Returns:
         list[tuple[int, str]]: A list of pairs, where the first element is
         an integer and the second an edit operation.
-
     >>> split_pairs("1M1D6M1I4M")
     [(1, 'M'), (1, 'D'), (6, 'M'), (1, 'I'), (4, 'M')]
-
     """
-    # In a more sane language, we could get a faster solution by identifying
-    # the part of a block that is all digits and then translate that
-    # into an integer, but the relative speed of pure Python and its
-    # regular expressions make this a reasonable solution.
-    return [(int(i), op) for i, op in re.findall(r"(\d+)([^\d]+)", cigar)]
 
+    cigar_list = []
+    for i in range(0, len(cigar), 2):
+        cigar_list.append((cigar[i], cigar[i+1]))
+    return (cigar_list)
 
 def cigar_to_edits(cigar: str) -> str:
     """Expand the compressed CIGAR encoding into the full list of edits.
-
     Args:
         cigar (str): A CIGAR string
-
     Returns:
         str: The edit operations the CIGAR string describes.
-
     >>> cigar_to_edits("1M1D6M1I4M")
     'MDMMMMMMIMMMM'
-
     """
-    return "".join([op * i for i, op in split_pairs(cigar)])
+    edits_str = ""
+    for i in range(0, len(cigar), 2):
+        for j in range(int(cigar[i])): # Loop for each repetition of a CIGAR descriptor (M, I, D)
+            edits_str += cigar[i+1]
+    return (edits_str)
 
-
-def split_blocks(x: str) -> list[str]:
+def split_blocks(x: str) -> list():
     """Split a string into blocks of equal character.
-
     Args:
         x (str): A string, but we sorta think it would be edits.
-
     Returns:
         list[str]: A list of blocks.
-
     >>> split_blocks('MDMMMMMMIMMMM')
     ['M', 'D', 'MMMMMM', 'I', 'MMMM']
-
     """
-    # In any other language, this would likely not be the most efficient
-    # approach to this, but since re.findall calls into C, it is faster
-    # than implementing a more reasonable algorithm in pure Python.
-    return [m[0] for m in re.findall(r"((.)\2*)", x)]
-
+    block_list = []
+    current_letter = x[0]
+    current_block = ""
+    for i in range(len(x)):
+        if x[i] == current_letter:
+            current_block += x[i]
+        else:
+            current_letter = x[i]
+            block_list.append(current_block)
+            current_block = x[i]
+    block_list.append(current_block) # Putting this outside the loop so there isn't an if statement
+                                     # which is checked each iteration but it will still save
+                                     # the last block
+    return (block_list)
 
 def edits_to_cigar(edits: str) -> str:
     """Encode a sequence of edits as a CIGAR.
-
     Args:
         edits (str): A sequence of edit operations
-
     Returns:
         str: The CIGAR encoding of edits.
-
     >>> edits_to_cigar('MDMMMMMMIMMMM')
     '1M1D6M1I4M'
-
     """
-    return "".join(f"{len(b)}{b[0]}" for b in split_blocks(edits))
+    block_list = split_blocks(edits)
+    CIGAR_str = ""
+    for i in block_list:
+        edit = str(len(i)) + i[0]
+        CIGAR_str += edit
+
+    return (CIGAR_str)
